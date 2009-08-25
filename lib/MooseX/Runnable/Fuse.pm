@@ -2,7 +2,7 @@ use MooseX::Declare;
 use Fuse;
 
 { package MooseX::Runnable::Fuse; # For PAUSE
-  our $VERSION = 0.01;
+  our $VERSION = 0.02;
 }
 
 role Filesystem::Fuse::Readable {
@@ -75,7 +75,7 @@ role Filesystem::Fuse::Attributes::Writable
 
 role MooseX::Runnable::Fuse with MooseX::Getopt with MooseX::Runnable {
 
-    use MooseX::Types::Moose qw(Bool);
+    use MooseX::Types::Moose qw(Bool Str);
     use MooseX::Types::Path::Class qw(Dir);
 
     has 'mountpoint' => (
@@ -83,6 +83,13 @@ role MooseX::Runnable::Fuse with MooseX::Getopt with MooseX::Runnable {
         isa      => Dir,
         required => 1,
         coerce   => 1,
+    );
+
+    has 'mountopts' => (
+        is       => 'ro',
+        isa      => Str,
+        default  => sub { "" },
+        required => 0,
     );
 
     has 'debug' => (
@@ -131,6 +138,7 @@ role MooseX::Runnable::Fuse with MooseX::Getopt with MooseX::Runnable {
         return Fuse::main( # no idea what the return value actually means
             debug      => $self->is_debug ? 1 : 0,
             mountpoint => $self->mountpoint->stringify,
+            mountopts  => $self->mountopts,
             @method_map,
         ) || 0;
 
@@ -153,7 +161,7 @@ MooseX::Runnable::Fuse - implement a FUSE filesystem as a Moose class
                      with Filesystem::Fuse::Readable {
         use MooseX::Types::Path::Class qw(File);
 
-        method getattr(File $file){
+        method getattr(File $file does coerce){
             ...
             return (0, 0, ...);
         }
